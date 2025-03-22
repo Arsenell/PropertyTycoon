@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: ee984df3d6556c444a01a72f6f5b6c52
+guid: 6ced5901796bf11488a37547f9615049
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -125480189991623609
-    second: dice-six-faces-six_0
+      213: 8061504988731849811
+    second: d5_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,7 +113,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: dice-six-faces-six_0
+      name: d5_0
       rect:
         serializedVersion: 2
         x: 0
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 74463399e64324ef0800000000000000
-      internalID: -125480189991623609
+      spriteID: 35cb668531830ef60800000000000000
+      internalID: 8061504988731849811
       vertices: []
       indices: 
       edges: []

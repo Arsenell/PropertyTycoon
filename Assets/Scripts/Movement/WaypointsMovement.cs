@@ -17,16 +17,30 @@ public class WaypointMover : MonoBehaviour
         }
     }
 
-    void Update()
+    public int getCurrnetWaypointIndex()
     {
-        // Move towards the current waypoint
-        Transform targetWaypoint = waypoints[currentWaypointIndex];
-        transform.position = Vector2.MoveTowards(transform.position, targetWaypoint.position, speed * Time.deltaTime);
+        return currentWaypointIndex;
+    }
 
-        // Check if the object has reached the waypoint
-        if (Vector2.Distance(transform.position, targetWaypoint.position) < 0.1f)
+    public void MovePlayer(int steps)
+    {
+        StartCoroutine(MovePlayerCoroutine(steps));
+    }
+
+    private IEnumerator MovePlayerCoroutine(int steps)
+    {
+        for (int i = 0; i < steps; i++)
         {
-            // Move to the next waypoint (loop back to the first if at the end)
+            Transform targetWaypoint = waypoints[currentWaypointIndex];
+
+            // Move towards the target waypoint
+            while (Vector2.Distance(transform.position, targetWaypoint.position) > 0.1f)
+            {
+                transform.position = Vector2.MoveTowards(transform.position, targetWaypoint.position, speed * Time.deltaTime);
+                yield return null; // Wait for the next frame
+            }
+
+            // Update to the next waypoint
             currentWaypointIndex = (currentWaypointIndex + 1) % waypoints.Length;
         }
     }

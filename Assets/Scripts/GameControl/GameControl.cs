@@ -3,10 +3,12 @@ using UnityEngine;
 public class GameControl : MonoBehaviour
 {
     private static GameObject player1, player2;
-
+    public static bool isGameOver = false;
     public static int diceSideThrown = 0;
     public static int player1StartWaypoint = 0;
     public static int player2StartWaypoint = 0;
+
+    // public Dice tmpDice;
 
     void Start() {
         player1 = GameObject.Find("Player1");
@@ -21,23 +23,29 @@ public class GameControl : MonoBehaviour
     }
 
     void Update() {
-        if (player1 != null && player1.GetComponent<WaypointMover>().waypointIndex > 0) {
-            player1StartWaypoint = player1.GetComponent<PlayerMovement>().waypointIndex;
+        if (player1 != null && player1.GetComponent<WaypointMover>().getCurrnetWaypointIndex() > 0) {
+            player1StartWaypoint = player1.GetComponent<WaypointMover>().getCurrnetWaypointIndex();
         }
-        if (player2 != null && player2.GetComponent<PlayerMovement>().waypointIndex > 0) {
-            player2StartWaypoint = player2.GetComponent<PlayerMovement>().waypointIndex;
+        if (player2 != null && player2.GetComponent<WaypointMover>().getCurrnetWaypointIndex() > 0) {
+            player2StartWaypoint = player2.GetComponent<WaypointMover>().getCurrnetWaypointIndex();
         }
     }
 
-    public static void MovePlayer(int playerToMove) {
+    // private void diceSidethrownTotal(){
+    //   int tmp = tmpDice.diceSideThrown;  
+    // }
+
+    public static void MovePlayer(int playerToMove, int diceSideThrown) {
         if (playerToMove == 1 && player1 != null) {
-            player1.GetComponent<PlayerMovement>().MovePlayer(diceSideThrown);
+            player1.GetComponent<WaypointMover>().MovePlayer(diceSideThrown);
         } else if (playerToMove == 2 && player2 != null) {
-            player2.GetComponent<PlayerMovement>().MovePlayer(diceSideThrown);
+            player2.GetComponent<WaypointMover>().MovePlayer(diceSideThrown);
         }
     }
-    public static void gameOver(string message) {
-    Debug.Log(message); // Display the game over message in the console
-    Time.timeScale = 0; // Pause the game by setting the time scale to 0
-}
+    public static bool GameOver(string message) {
+        Debug.Log(message); // Display the game over message in the console
+        Time.timeScale = 0; // Pause the game by setting the time scale to 0
+        isGameOver = true; // Set the game-over state to true
+        return true; // Indicate that the game is over
+    }
 }
