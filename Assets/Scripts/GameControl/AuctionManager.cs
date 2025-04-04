@@ -24,6 +24,7 @@ public class AuctionManager : MonoBehaviour
         highestBidText.text = "Highest Bid: £0";
         timer = 30f;
         isAuctionRunning = true;
+        Debug.Log($"Auction started ");
         auctionPanel.SetActive(true);
     }
 
