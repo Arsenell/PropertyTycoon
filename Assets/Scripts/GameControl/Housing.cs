@@ -2,13 +2,13 @@ using UnityEngine;
 
 public class Housing
 {
-    public string Name { get; private set; }
-    public string Group { get; private set; }
-    public bool CanBeBought { get; private set; }
-    public int Price { get; private set; }
-    public int[] Rent { get; private set; } // Rent for 0, 1, 2, 3, 4 houses and hotel
-    public Player Owner { get; set; } // Tracks the owner of the property
-    public Transform Waypoint { get; set; } // Reference to the associated waypoint
+    public string Name;
+    public string Group;
+    public bool CanBeBought;
+    public int Price;
+    private int[] Rent;
+    public GamePlayer Owner;
+    public Transform Waypoint;
 
     public Housing(string name, string group, bool canBeBought, int price, int[] rent)
     {
@@ -17,14 +17,23 @@ public class Housing
         CanBeBought = canBeBought;
         Price = price;
         Rent = rent;
+        Owner = null;
+        Waypoint = null;
     }
 
+    public bool IsSpecialProperty()
+    {
+        // Define special properties that cannot be bought
+        return Group == "Station" || Group == "Utilities" || Name == "Income Tax" || Name == "Go" || Name == "Jail" || Name == "Free Parking";
+    }
+
+    // Make this method public so it can be accessed from other classes
     public int GetRent(int houses)
     {
         if (houses < 0 || houses >= Rent.Length)
         {
-            Debug.LogError("Invalid number of houses!");
-            return 0;
+            Debug.LogError($"Invalid number of houses: {houses}. Returning rent for 0 houses.");
+            return Rent[0];
         }
         return Rent[houses];
     }

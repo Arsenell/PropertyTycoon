@@ -19,31 +19,31 @@ public class HouseInteraction : MonoBehaviour
     /// <param name="other">The collider of the player GameObject.</param>
     private void OnTriggerEnter(Collider other)
     {
-        Player player = other.GetComponent<Player>();
+        GamePlayer player = other.GetComponent<GamePlayer>();
         if (player == null || property == null)
         {
-            return; // Exit if no player or property is associated
+            return;
         }
 
         Debug.Log($"Player {player.playerID} landed on {property.Name}.");
 
-        // Handle property interaction
-        if (property.Owner == null && property.CanBeBought)
+        if (property.IsSpecialProperty())
         {
-            // Property is unowned and can be bought
+            Debug.Log($"Special property {property.Name} triggered. Handle special logic here.");
+            // Add logic for special properties (e.g., pay tax, draw card, etc.)
+        }
+        else if (property.Owner == null && property.CanBeBought)
+        {
             Debug.Log($"Property {property.Name} is available for purchase.");
-            player.buyProperty(property);
+            // Handle purchase logic
         }
         else if (property.Owner != null && property.Owner != player)
         {
-            // Property is owned by another player, pay rent
-            int rent = property.GetRent(0); // Assuming 0 houses for simplicity
-            Debug.Log($"Property {property.Name} is owned by Player {property.Owner.playerID}. Rent is {rent}.");
-            player.payRent(rent, property.Owner);
+            Debug.Log($"Property {property.Name} is owned by {property.Owner.TokenName}. Player {player.playerID} must pay rent.");
+            // Handle rent payment
         }
         else if (property.Owner == player)
         {
-            // Player owns this property
             Debug.Log($"Player {player.playerID} landed on their own property: {property.Name}.");
         }
     }
