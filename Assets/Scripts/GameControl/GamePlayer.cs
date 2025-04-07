@@ -8,6 +8,9 @@ public class GamePlayer : MonoBehaviour
     public int playerID;
     public ArrayList OwnedProperties = new ArrayList(); // List of properties owned by the player
 
+    public SpriteRenderer spriteRenderer; // Reference to the SpriteRenderer component
+
+
     // Adjust the player's money by a specified amount
     public void AdjustMoney(int amount)
     {
@@ -78,5 +81,20 @@ public class GamePlayer : MonoBehaviour
 
         Debug.Log($"{TokenName} bought {property.Name} for {property.Price}.");
         return true;
+    }
+        public void SetSprite(Sprite sprite)
+    {
+        if (spriteRenderer == null)
+        {
+            spriteRenderer = GetComponent<SpriteRenderer>();
+            if (spriteRenderer == null)
+            {
+                Debug.LogError("SpriteRenderer component is missing on the player GameObject.");
+                return;
+            }
+        }
+
+        spriteRenderer.sprite = sprite;
+        Debug.Log($"{TokenName} has been assigned a new sprite.");
     }
 }

@@ -1,13 +1,10 @@
-using Unity.Properties;
 using UnityEngine;
 
 public class GameControl : MonoBehaviour
 {
-    private static GameObject player1, player2;
+    private static GameObject[] players; // Array to hold all player GameObjects
     public static bool isGameOver = false;
     public static int diceSideThrown = 0;
-    public static int player1StartWaypoint = 0;
-    public static int player2StartWaypoint = 0;
 
     private HousingManager housingManager;
     private AuctionManager auctionManager;
@@ -15,7 +12,8 @@ public class GameControl : MonoBehaviour
     private AuctionButton auctionButton;
     private static GameControl instance;
 
-    public GamePlayer currentPlayer; // Add this attribute to track the current player
+    private int currentPlayerIndex = 0; // Tracks the current player's turn
+    private int consecutiveDoubles = 0; // Tracks how many doubles the current player has rolled
 
     public static GameControl Instance
     {
@@ -29,201 +27,116 @@ public class GameControl : MonoBehaviour
         }
     }
 
-    // Add logic to set the current player during the game
-    public void SetCurrentPlayer(GamePlayer player)
-    {
-        currentPlayer = player;
-    }
-
     void Start()
     {
-        player1 = GameObject.Find("Player1");
-        player2 = GameObject.Find("Player2");
+        // Initialize references
         housingManager = GameObject.Find("HousingManager")?.GetComponent<HousingManager>();
         auctionManager = GameObject.Find("AuctionManager")?.GetComponent<AuctionManager>();
-        if (player1 == null || player2 == null || housingManager == null)
+
+        if (housingManager == null || auctionManager == null)
         {
-            Debug.LogError("GameControl: Missing references to players or HousingManager!");
+            Debug.LogError("GameControl: Missing references to HousingManager or AuctionManager!");
         }
+
+        // Spawn players
+        SpawnPlayers();
     }
 
-    void Update()
+    private void SpawnPlayers()
     {
-        if (player1 != null)
-        {
-            int waypointIndex = player1.GetComponent<WaypointMover>().getCurrentWaypointIndex();
-            if (waypointIndex > 0)
-            {
-                player1StartWaypoint = waypointIndex;
-            }
-        }
+        int playerCount = GameSettings.playerCount;
+        players = new GameObject[playerCount];
 
-        if (player2 != null)
+        PlayerSpawner playerSpawner = FindObjectOfType<PlayerSpawner>();
+        if (playerSpawner == null)
         {
-            int waypointIndex = player2.GetComponent<WaypointMover>().getCurrentWaypointIndex();
-            if (waypointIndex > 0)
-            {
-                player2StartWaypoint = waypointIndex;
-            }
-        }
-    }
-
-    public void ProcessProperty(int playerID, int propertyID)
-    {
-        if (housingManager == null)
-        {
-            Debug.LogError("GameControl: HousingManager is not initialized!");
+            Debug.LogError("PlayerSpawner is not found in the scene!");
             return;
         }
 
-        Housing property = housingManager.Properties[propertyID];
-        GamePlayer player = (playerID == 1) ? player1.GetComponent<GamePlayer>() : player2.GetComponent<GamePlayer>();
+        // Spawn players using the PlayerSpawner
+        playerSpawner.SpawnPlayers();
 
-        if (property == null)
+        // Assign players to the players array
+        for (int i = 0; i < playerCount; i++)
         {
-            Debug.LogError($"No property found at property ID {propertyID}.");
+            players[i] = GameObject.Find($"Player {i + 1}");
+            if (players[i] == null)
+            {
+                Debug.LogError($"Player {i + 1} was not found after spawning!");
+            }
+        }
+
+        Debug.Log($"Spawned and assigned {playerCount} players.");
+    }
+
+    public void MovePlayer(int playerToMove, int diceSideThrown, bool isDouble)
+    {
+        if (playerToMove < 1 || playerToMove > players.Length)
+        {
+            Debug.LogError($"Player {playerToMove} is out of bounds!");
             return;
         }
 
+        GamePlayer player = players[playerToMove - 1]?.GetComponent<GamePlayer>();
         if (player == null)
         {
-            Debug.LogError($"Player {playerID} is null. Cannot process property.");
+            Debug.LogError($"Player {playerToMove} is null or does not exist.");
             return;
         }
 
-        if (property.CanBeBought && property.Owner == null)
+        if (isDouble)
         {
-            Debug.Log($"Player {playerID} landed on {property.Name}, which can be bought for {property.Price}.");
-            auctionButton = GameObject.Find("AuctionButton")?.GetComponent<AuctionButton>();
-            if (auctionButton == null)
+            consecutiveDoubles++;
+            Debug.Log($"Player {playerToMove} rolled a double! Consecutive doubles: {consecutiveDoubles}");
+
+            if (consecutiveDoubles >= 2)
             {
-                Debug.LogError("AuctionButton is not found or does not have the AuctionButton component.");
+                Debug.Log($"Player {playerToMove} rolled doubles twice in a row! Sending to jail.");
+                SendPlayerToJail(playerToMove);
+                SwitchTurn();
                 return;
             }
-            auctionButton.SetProperty(property);
-            HandleBuyPrompt(player, property);
-            HandleBuyOrAuction(player, property);
-        }
-        else if (property.Owner != null && property.Owner != player)
-        {
-            int rent = property.GetRent(0); // Assuming 0 houses for simplicity
-            player.payRent(rent, property.Owner);
-            Debug.Log($"Player {playerID} paid {rent} in rent to {property.Owner.TokenName}.");
         }
         else
         {
-            Debug.Log($"Player {playerID} landed on {property.Name}, but it cannot be bought.");
+            consecutiveDoubles = 0; // Reset doubles counter if no double is rolled
         }
+
+        Debug.Log($"Moving Player {playerToMove} by {diceSideThrown} spaces.");
+
+        // Call the player's movement logic
+        player.GetComponent<WaypointMover>().MovePlayer(diceSideThrown, () =>
+        {
+            HandlePropertyPurchase(playerToMove); // Handle property purchase after moving
+            if (!isDouble) SwitchTurn(); // Switch to the next player's turn if no double
+        });
+    }
+
+    private void SendPlayerToJail(int playerToMove)
+    {
+        GamePlayer player = players[playerToMove - 1]?.GetComponent<GamePlayer>();
+        if (player != null)
+        {
+            Debug.Log($"Player {playerToMove} is sent to jail.");
+            player.GetComponent<WaypointMover>().MoveToJail(); // Assuming MoveToJail is implemented in WaypointMover
+        }
+    }
+
+    private void SwitchTurn()
+    {
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.Length; // Wrap around to Player 1 after the last player
+        Debug.Log($"Now it's Player {currentPlayerIndex + 1}'s turn!");
+    }
+
+    public int GetCurrentPlayerIndex()
+    {
+        return currentPlayerIndex;
     }
 
     public void HandlePropertyPurchase(int playerID)
     {
-        // Determine the player's current waypoint index
-        int currentWaypointIndex = (playerID == 1) ? player1.GetComponent<WaypointMover>().getCurrentWaypointIndex()
-                                                   : player2.GetComponent<WaypointMover>().getCurrentWaypointIndex();
-        if (currentWaypointIndex < 0 || currentWaypointIndex >= housingManager.Properties.Count)
-        {
-            Debug.LogError($"Invalid waypoint index {currentWaypointIndex}. Cannot process property.");
-            return;
-        }
-        Debug.Log($"Player {playerID} landed on waypoint {currentWaypointIndex}.");
-        
-        // Use ProcessProperty to handle the property logic
-        ProcessProperty(playerID, currentWaypointIndex);
-    }
-
-    public static void MovePlayer(int playerToMove, int diceSideThrown)
-    {
-        if (Instance == null)
-        {
-            Debug.LogError("GameControl: Instance is not initialized!");
-            return;
-        }
-
-        if (playerToMove == 1 && player1 != null)
-        {
-            player1.GetComponent<WaypointMover>().MovePlayer(diceSideThrown, () =>
-            {
-                Instance.HandlePropertyPurchase(1); // Handle property purchase after moving
-            });
-        }
-        else if (playerToMove == 2 && player2 != null)
-        {
-            player2.GetComponent<WaypointMover>().MovePlayer(diceSideThrown, () =>
-            {
-                Instance.HandlePropertyPurchase(2); // Handle property purchase after moving
-            });
-        }
-        else
-        {
-            Debug.LogError($"GameControl: Invalid player ID {playerToMove} or player object is null.");
-        }
-    }
-
-    public static bool GameOver(string message)
-    {
-        Debug.Log(message);
-        Time.timeScale = 0;
-        isGameOver = true;
-        return true;
-    }
-
-    private void HandleBuyOrAuction(GamePlayer player, Housing property)
-    {
-        Debug.Log($"Prompting {player.TokenName} to buy or auction {property.Name}.");
-
-        // Display the buy/auction UI
-        GameObject buyAuctionPanel = GameObject.Find("BuyAuctionPanel");
-        if (buyAuctionPanel != null)
-        {
-            buyAuctionPanel.SetActive(true);
-
-            // Set up the Buy button
-            BuyButton buyButton = GameObject.Find("BuyButton")?.GetComponent<BuyButton>();
-            if (buyButton != null)
-            {
-                buyButton.SetProperty(property);
-            }
-            else
-            {
-                Debug.LogError("BuyButton is not found or does not have the BuyButton component.");
-            }
-
-            // Set up the Auction button
-            AuctionButton auctionButton = GameObject.Find("AuctionButton")?.GetComponent<AuctionButton>();
-            if (auctionButton != null)
-            {
-                auctionButton.SetProperty(property);
-            }
-            else
-            {
-                Debug.LogError("AuctionButton is not found or does not have the AuctionButton component.");
-            }
-        }
-        else
-        {
-            Debug.LogError("BuyAuctionPanel is not found in the scene.");
-        }
-    }
-
-    private void HandleBuyPrompt(GamePlayer player, Housing property)
-    {
-        // Set the property for the buy button
-        BuyButton buyButton = GameObject.Find("BuyButton")?.GetComponent<BuyButton>();
-        if (buyButton != null)
-        {
-            buyButton.SetProperty(property);
-        }
-        else
-        {
-            Debug.LogError("BuyButton is not found or does not have the BuyButton component.");
-        }
-    }
-
-    // Simulate player decision (replace this with actual UI logic)
-    private bool SimulatePlayerDecision()
-    {
-        // Simulate a random decision for now (true = buy, false = auction)
-        return Random.value > 0.5f;
+        // Logic for handling property purchase
+        Debug.Log($"Player {playerID} landed on a property. Handle purchase logic here.");
     }
 }

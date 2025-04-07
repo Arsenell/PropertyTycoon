@@ -1,17 +1,5 @@
 using UnityEngine;
 using System.Collections; // Add this to use IEnumerator
-using GameControlNamespace; // Add this at the top of DiceButtonRoll.cs
-
-namespace GameControlNamespace
-{
-    public class GameControl : MonoBehaviour
-    {
-        public static void MovePlayer(int playerToMove, int diceSideThrown)
-        {
-            // Implementation
-        }
-    }
-}
 
 public class DiceButtonRoll : MonoBehaviour
 {
@@ -58,8 +46,12 @@ public class DiceButtonRoll : MonoBehaviour
         int tmpVal1 = dice.GetRolledValue();
         int tmpVal2 = Dice2.GetRolledValue();
 
-        // Move the player
-        GameControl.MovePlayer(1, tmpVal1 + tmpVal2);
+        // Check if the player rolled a double
+        bool isDouble = tmpVal1 == tmpVal2;
+
+        // Move the current player
+        int currentPlayerIndex = GameControl.Instance.GetCurrentPlayerIndex(); // Get the current player's index
+        GameControl.Instance.MovePlayer(currentPlayerIndex + 1, tmpVal1 + tmpVal2, isDouble); // Pass the correct player index (1-based)
     }
 
     void OnMouseUp()
