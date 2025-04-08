@@ -18,6 +18,19 @@ public class HousingManager : MonoBehaviour
         AssignWaypointsToProperties();
     }
 
+    public Housing GetPropertyAtWaypoint(int waypointIndex)
+    {
+        // Use the correct variable name: Properties
+        foreach (Housing property in Properties)
+        {
+            if (property.WaypointIndex == waypointIndex)
+            {
+                return property;
+            }
+        }
+        return null; // No property found at this waypoint
+    }
+
     void PopulateWaypoints()
     {
         GameObject waypointsParent = GameObject.Find("Waypoints");
@@ -139,6 +152,7 @@ public class HousingManager : MonoBehaviour
     void AssignWaypointToProperty(Housing property, Transform waypoint)
     {
         property.Waypoint = waypoint;
+        property.WaypointIndex = Waypoints.IndexOf(waypoint); // Set the WaypointIndex
 
         if (waypoint.GetComponent<Collider>() == null)
         {
@@ -150,7 +164,7 @@ public class HousingManager : MonoBehaviour
             waypoint.gameObject.AddComponent<HouseInteraction>().Initialize(property);
         }
 
-        Debug.Log($"Assigned waypoint '{waypoint.name}' to property '{property.Name}'.");
+        Debug.Log($"Assigned waypoint '{waypoint.name}' to property '{property.Name}' with index {property.WaypointIndex}.");
     }
 
     public bool BuyProperty(Housing property, GamePlayer player)

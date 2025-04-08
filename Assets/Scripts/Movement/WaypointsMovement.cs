@@ -40,4 +40,19 @@ public class WaypointMover : MonoBehaviour
     {
         return currentWaypointIndex;
     }
+
+    // New method to move the player to the jail waypoint
+    public void MoveToJail(int jailWaypointIndex)
+    {
+        if (jailWaypointIndex >= 0 && jailWaypointIndex < Waypoints.Length)
+        {
+            currentWaypointIndex = jailWaypointIndex;
+            transform.position = Waypoints[jailWaypointIndex].position;
+            Debug.Log($"Player moved to jail at waypoint index: {jailWaypointIndex}, position: {Waypoints[jailWaypointIndex].position}");
+        }
+        else
+        {
+            Debug.LogError("Invalid jail waypoint index.");
+        }
+    }
 }

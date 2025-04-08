@@ -10,12 +10,32 @@ public class GamePlayer : MonoBehaviour
 
     public SpriteRenderer spriteRenderer; // Reference to the SpriteRenderer component
 
-
     // Adjust the player's money by a specified amount
     public void AdjustMoney(int amount)
     {
         Money += amount;
         Debug.Log($"{TokenName}'s money is now {Money}.");
+    }
+
+    public void AddMoney(int amount)
+    {
+        Money += amount;
+        Debug.Log($"Player {playerID} received ${amount}. Total money: ${Money}.");
+    }
+
+    public bool DeductMoney(int amount)
+    {
+        if (Money >= amount)
+        {
+            Money -= amount;
+            Debug.Log($"Player {playerID} paid ${amount}. Remaining money: ${Money}.");
+            return true;
+        }
+        else
+        {
+            Debug.Log($"Player {playerID} doesn't have enough money to pay ${amount}.");
+            return false;
+        }
     }
 
     // Add a property to the player's owned properties
@@ -82,7 +102,8 @@ public class GamePlayer : MonoBehaviour
         Debug.Log($"{TokenName} bought {property.Name} for {property.Price}.");
         return true;
     }
-        public void SetSprite(Sprite sprite)
+
+    public void SetSprite(Sprite sprite)
     {
         if (spriteRenderer == null)
         {

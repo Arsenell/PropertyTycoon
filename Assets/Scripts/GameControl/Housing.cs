@@ -2,13 +2,20 @@ using UnityEngine;
 
 public class Housing
 {
-    public string Name;
-    public string Group;
-    public bool CanBeBought;
-    public int Price;
-    private int[] Rent;
-    public GamePlayer Owner;
-    public Transform Waypoint;
+    public string Name { get; set; }
+    public string Group { get; set; }
+    public bool CanBeBought { get; set; }
+    public int Price { get; set; }
+    public int[] Rent { get; set; }
+    public GamePlayer Owner { get; set; } // Reference to the player who owns the property
+    public Transform Waypoint { get; set; } // Reference to the waypoint Transform
+    public int WaypointIndex { get; set; } // Index of the waypoint
+
+    // Property to check if the property is owned
+    public bool IsOwned
+    {
+        get { return Owner != null; }
+    }
 
     public Housing(string name, string group, bool canBeBought, int price, int[] rent)
     {
@@ -17,8 +24,9 @@ public class Housing
         CanBeBought = canBeBought;
         Price = price;
         Rent = rent;
-        Owner = null;
+        Owner = null; // Initially, no one owns the property
         Waypoint = null;
+        WaypointIndex = -1; // Default to -1 (unassigned)
     }
 
     public bool IsSpecialProperty()
