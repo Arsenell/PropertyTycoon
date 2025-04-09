@@ -35,6 +35,7 @@ public class BuyButton : MonoBehaviour
             if (success)
             {
                 Debug.Log($"{currentPlayer.TokenName} successfully bought {propertyToBuy.Name} for {propertyToBuy.Price}.");
+                Debug.Log($"{currentPlayer.TokenName} now has £{currentPlayer.Money} remaining."); // Log remaining money
             }
             else
             {

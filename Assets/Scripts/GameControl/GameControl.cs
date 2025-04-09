@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic; // Add this line to use Queue<>
 
 public class GameControl : MonoBehaviour
 {
@@ -18,6 +19,11 @@ public class GameControl : MonoBehaviour
     private const int GO_REWARD = 200; // Reward for passing GO
     private const int INCOME_TAX_AMOUNT = 100; // Fixed income tax amount
     private bool isTurnActive = true; // Tracks if the current player's turn is active
+
+    public TextAsset potLuckCSV;
+    public TextAsset opportunityKnocksCSV;
+    private Queue<Card> potLuckCards = new Queue<Card>();
+    private Queue<Card> opportunityKnocksCards = new Queue<Card>();
 
     public static GameControl Instance
     {
